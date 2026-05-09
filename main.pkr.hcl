@@ -17,14 +17,15 @@ source "proxmox-iso" "debian" {
   token                    = var.proxmox_api_token_secret
   insecure_skip_tls_verify = true
 
-  node    = "pve"
-  vm_id   = 10000
-  vm_name = "debian13-template"
+  node                 = var.proxmox_node_name
+  vm_id                = var.vm_id
+  vm_name              = var.vm_name
+  template_description = ""
 
   boot_iso {
     type             = "scsi"
-    iso_url          = "https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/debian-13.3.0-amd64-netinst.iso"
-    iso_checksum     = "sha256:c9f09d24b7e834e6834f2ffa565b33d6f1f540d04bd25c79ad9953bc79a8ac02"
+    iso_url          = var.iso_url
+    iso_checksum     = var.iso_hash
     iso_storage_pool = "local"
     unmount          = true
   }
@@ -39,6 +40,13 @@ source "proxmox-iso" "debian" {
     type         = "scsi"
   }
 
+  efidisk {
+    efi_storage_pool  = "local"
+    pre_enrolled_keys = true
+    efi_format        = "raw"
+    efi_type          = "4m"
+  }
+
   cores    = "4"
   memory   = "4096"
   cpu_type = "host"
@@ -50,14 +58,14 @@ source "proxmox-iso" "debian" {
     model    = "virtio"
     bridge   = "vmbr0"
     firewall = "false"
-    vlan_tag = var.vm_vlan_tag
+    vlan_tag = var.vlan_id
   }
 
   cloud_init              = true
   cloud_init_storage_pool = "local-lvm"
 
   boot_command = [
-    "<wait><wait>",
+    "<wait><wait><wait>",
     "e",
     "<wait>",
     "<down><down><down><end>",
@@ -73,7 +81,7 @@ source "proxmox-iso" "debian" {
     "<f10>"
   ]
 
-  boot_key_interval = "30ms"
+  boot_key_interval = "50ms"
   boot_wait         = "10s"
 
   http_content = {
@@ -81,8 +89,8 @@ source "proxmox-iso" "debian" {
       root_password = var.root_password
     })
   }
-  http_port_min  = 8802
-  http_port_max  = 8802
+  http_port_min = 8802
+  http_port_max = 8802
 
   ssh_username = "root"
   ssh_password = var.root_password
@@ -132,6 +140,16 @@ build {
     execute_command = "chmod +x {{ .Path }}; /bin/bash {{ .Path }}"
     inline = [
       "set -x",
+      "mkdir -p /etc/ssh/sshd_config.d",
+      "cat > /etc/ssh/sshd_config.d/99-hardening.conf <<'EOF'",
+      "PermitRootLogin prohibit-password",
+      "PasswordAuthentication no",
+      "KbdInteractiveAuthentication no",
+      "EOF",
+
+      "sshd -t",
+      "systemctl reload ssh",
+      "systemctl reload ssh",
       "cloud-init clean --logs --seed",
       "rm -rf /var/lib/cloud/instances/*",
       "rm -f /etc/ssh/ssh_host_*",

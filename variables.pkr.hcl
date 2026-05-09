@@ -14,7 +14,11 @@ variable "proxmox_api_token_secret" {
   default   = env("PROXMOX_API_TOKEN_SECRET")
 }
 
-variable "vm_vlan_tag" {
+variable "proxmox_node_name" {
+  type = string
+}
+
+variable "vlan_id" {
   type = number
   default = null
 }
@@ -36,5 +40,21 @@ variable "wsl" {
 }
 
 variable "host_ip" {
+  type = string
+}
+
+variable "vm_id" {
+  type = number
+}
+
+variable "vm_name" {
+  type = string
+}
+
+variable "iso_url" {
+  type = string
+}
+
+variable "iso_hash" {
   type = string
 }
