@@ -40,7 +40,7 @@ source "proxmox-iso" "debian" {
     type         = "scsi"
   }
 
-  efidisk {
+  efi_config {
     efi_storage_pool  = "local"
     pre_enrolled_keys = true
     efi_format        = "raw"
