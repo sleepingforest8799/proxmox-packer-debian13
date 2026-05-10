@@ -7,6 +7,15 @@ Packer template for building a Debian 13 template VM on Proxmox VE.
 make build
 ```
 
+# Permissions
+```shell
+pveum user add packer@pve
+pveum user token add packer@pve provider --privsep 1
+pveum roleadd Packer -privs "Datastore.Audit Datastore.AllocateSpace Datastore.AllocateTemplate Sys.Audit VM.Allocate VM.Clone VM.Audit VM.Console VM.Monitor VM.PowerMgmt VM.Config.CDROM VM.Config.CPU VM.Config.Disk VM.Config.HWType VM.Config.Memory VM.Config.Network VM.Config.Options VM.Config.Cloudinit Pool.Audit Pool.Allocate SDN.Use"
+pveum aclmod / --users packer@pve --roles Packer
+pveum aclmod / --tokens "packer@pve\!provider" --roles Packer
+```
+
 # WSL
 If packer runs from WSL, set: 
 
